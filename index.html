@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Talk Tally</title>
+<style>
+html{color-scheme:light}
+[hidden]{display:none!important}
+img{max-width:100%}
+
+:root{
+  --navy:#1B2450; --teal:#1DB793; --maroon:#8C1D40; --gold:#FFC627;
+  --ink:#191919; --ink2:#5C5F6B; --line:#D0D0D0; --line2:#E8E8E8;
+  --bg:#F4F5F8; --panel:#FFFFFF; --tile:#D3D5DC; --tile-on:#CBEADF; --tile-hot:#A8E0CB; --bar0:#AEB1BD; --bar1:#1DB793; --bar2:#0F8C6E;
+  --head-bg:#1B2450; --head-ink:#FFFFFF; --head-sub:#C7CBDB;
+  --tick:#1B2450; --btn:#FFFFFF; --btn-ink:#1B2450;
+  --pb:#C9DAF8; --pb-ink:#1B2450; --pg:#D9EAD3; --pg-ink:#1E4620; --pp:#EAD1DC; --pp-ink:#6B1D3E; --pn:#E4E5EA; --pn-ink:#5C5F6B;
+  --pill-on:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ink:#ECEDF2; --ink2:#A9ADBD; --line:#3A3F55; --line2:#2B2F42;
+    --bg:#12152A; --panel:#1D2140; --tile:#2C3048; --tile-on:#243E44; --tile-hot:#1E5A4E; --bar0:#4A4F6A; --bar1:#1DB793; --bar2:#5FE0BC;
+    --head-bg:#0E1122; --tick:#ECEDF2; --btn:#252A4A; --btn-ink:#ECEDF2;
+    --pb:#2E4A7A; --pb-ink:#DCE8FF; --pg:#2F5A38; --pg-ink:#D6F2DA; --pp:#6E2F4B; --pp-ink:#FFDCE9; --pn:#3A3F55; --pn-ink:#C0C4D2;
+    --pill-on:#0E1122;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#ECEDF2; --ink2:#A9ADBD; --line:#3A3F55; --line2:#2B2F42;
+  --bg:#12152A; --panel:#1D2140; --tile:#2C3048; --tile-on:#243E44; --tile-hot:#1E5A4E; --bar0:#4A4F6A; --bar1:#1DB793; --bar2:#5FE0BC;
+  --head-bg:#0E1122; --tick:#ECEDF2; --btn:#252A4A; --btn-ink:#ECEDF2;
+  --pb:#2E4A7A; --pb-ink:#DCE8FF; --pg:#2F5A38; --pg-ink:#D6F2DA; --pp:#6E2F4B; --pp-ink:#FFDCE9; --pn:#3A3F55; --pn-ink:#C0C4D2;
+  --pill-on:#0E1122;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.4;display:flex;flex-direction:column}
+button{font:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* header */
+.top{background:var(--head-bg);color:var(--head-ink);padding:10px 16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;border-bottom:4px solid var(--gold)}
+.brand{display:flex;flex-direction:column;gap:1px}
+.brand b{font-size:17px;letter-spacing:.02em}
+.brand span{font-size:11px;color:var(--head-sub);text-transform:uppercase;letter-spacing:.08em}
+.seg{display:flex;border:1px solid rgba(255,255,255,.35);border-radius:6px;overflow:hidden}
+.seg button{background:transparent;color:var(--head-sub);border:0;padding:7px 14px;font-weight:bold;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--gold);color:#1B2450}
+.stat{display:flex;flex-direction:column;gap:1px;font-variant-numeric:tabular-nums}
+.stat span{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--head-sub)}
+.stat b{font-size:18px}
+.next{flex:1;min-width:220px;display:flex;align-items:baseline;gap:12px;background:rgba(255,255,255,.08);border-left:4px solid var(--gold);border-radius:4px;padding:6px 14px}
+.next .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);font-weight:bold}
+.next b{font-size:26px;line-height:1.1}
+.next small{color:var(--head-sub);font-size:15px}
+.sw{display:flex;align-items:center;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--head-sub)}
+.sw button{width:46px;height:24px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);position:relative;padding:0}
+.sw button::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:var(--gold);transition:left .15s}
+.sw button[aria-checked="true"]::after{left:25px}
+
+/* toolbar */
+.bar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.bar .sp{flex:1}
+.bar select{font:inherit;padding:7px 10px;border-radius:4px;border:1px solid var(--line);background:var(--btn);color:var(--btn-ink)}
+.btn{background:var(--btn);color:var(--btn-ink);border:1px solid var(--line);border-radius:4px;padding:8px 16px;font-size:14px;font-weight:bold}
+.btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn.danger{color:var(--maroon)}
+.btn:disabled{opacity:.45;cursor:default}
+.legend{font-size:12px;color:var(--ink2);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.legend .tk{vertical-align:middle;margin-right:4px}
+.legend kbd{font-family:inherit;border:1px solid var(--line);border-radius:3px;padding:0 5px;background:var(--bg);font-size:11px}
+
+/* main */
+.main{flex:1;display:flex;min-height:0}
+.board{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.grid{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.row{flex:1;display:flex;justify-content:center;gap:8px;min-height:0}
+.row .tile{flex:0 1 calc((100% - 16px)/var(--cols))}
+
+/* tile */
+.tile{position:relative;background:var(--tile);border:1px solid var(--line);border-top:6px solid var(--bar0);border-radius:6px;display:flex;flex-direction:column;min-height:150px;overflow:hidden;transition:background .2s,opacity .3s;user-select:none;cursor:pointer;padding:10px 12px 8px}
+.tile.sem .foot{padding-top:4px}
+.tile:hover{filter:brightness(.96)}
+.tile.on{background:var(--tile-on);border-top-color:var(--bar1)}
+.tile.hot{background:var(--tile-hot);border-top-color:var(--bar2)}
+.tile.on .num,.tile.hot .num{color:var(--bar1);opacity:.9}
+.tile.hot .num{color:var(--bar2)}
+.tile.stale{opacity:.7}
+.tile.me{border-top-color:var(--gold)}
+.tile.armed{outline:3px solid var(--gold);outline-offset:-3px}
+.tile .name{font-weight:bold;font-size:clamp(22px,3vw,36px);line-height:1.1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tile .name .k{font-weight:normal;font-size:14px;color:var(--ink2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;margin-top:3px;flex:none}
+.tile .last{font-size:16px;color:var(--ink2);margin-top:4px;font-variant-numeric:tabular-nums}
+.tile .rank{position:absolute;right:12px;bottom:12px;font-size:20px;font-weight:bold;letter-spacing:.06em;text-transform:uppercase;border-radius:20px;padding:7px 16px;border:2.5px solid var(--gold);color:var(--ink);background:transparent;font-variant-numeric:tabular-nums}
+.tile .rank.r1{background:var(--gold);color:#1B2450;border-color:var(--gold)}
+.tile .rank.rn{border-color:var(--line);color:var(--ink2)}
+.tile .foot{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-top:auto;padding-top:8px}
+.tile .num{font-size:clamp(34px,4.5vw,56px);font-weight:bold;color:var(--ink);opacity:.35;line-height:1;font-variant-numeric:tabular-nums;flex:none}
+.tile .ticks{display:flex;flex-wrap:wrap;gap:6px;padding-right:130px}
+.tk{display:inline-block;width:8px;height:26px;border-radius:2px;background:var(--tick)}
+.tk.c{background:transparent;border:2.5px solid var(--tick);width:10px}
+.legend .tk{width:6px;height:16px}
+.legend .tk.c{width:8px;border-width:2px}
+
+/* seminar pills */
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.pill{border:0;border-radius:14px;padding:5px 10px;font-size:13px;font-weight:bold;display:inline-flex;align-items:center;gap:6px;line-height:1;color:var(--pn-ink);background:var(--pn)}
+.pill.b{background:var(--pb);color:var(--pb-ink)}
+.pill.g{background:var(--pg);color:var(--pg-ink)}
+.pill.p{background:var(--pp);color:var(--pp-ink)}
+.pill:hover{filter:brightness(.92)}
+.pill .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:bold;font-size:14px;background:var(--pill-on);border-radius:8px;padding:2px 6px;letter-spacing:.08em;min-width:14px;text-align:center}
+.pill:not(.has) .v{display:none}
+.pill.cam.has{background:var(--maroon);color:#fff}
+.tile.sem .foot{flex-direction:row;align-items:flex-end;gap:12px}
+.tile.sem .num{font-size:clamp(28px,3.5vw,44px)}
+.tile .notes{display:flex;flex-direction:column;gap:2px;margin-top:4px;padding-right:110px}
+.tile .note{font-size:13px;color:var(--ink2);font-style:italic;line-height:1.3}
+.tile .note::before{content:'· '}
+.camline{margin-top:5px}
+.tile .noteedit{display:flex;gap:6px;margin-top:8px;cursor:default}
+.tile .noteedit .btn{padding:5px 10px;font-size:13px}
+.tile .noteedit input{flex:1;font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);min-width:0}
+
+/* roster */
+.side{width:260px;border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.side h2{margin:0;padding:12px 14px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink2);display:flex;justify-content:space-between}
+.side h2 span{font-weight:normal;font-variant-numeric:tabular-nums}
+.list{overflow:auto;padding:0 8px 10px;display:flex;flex-direction:column;gap:2px}
+.prow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1px solid transparent;background:transparent;color:var(--ink);border-radius:4px;padding:7px 10px;font-size:15px}
+.prow:hover{border-color:var(--line)}
+.prow .box{width:18px;height:18px;border:2px solid var(--line);border-radius:3px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:bold}
+.prow.in{background:var(--tile)}
+.prow.in .box{background:var(--teal);border-color:var(--teal)}
+.prow .cnt{margin-left:auto;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.side .help{margin-top:auto;padding:10px 14px 14px;font-size:11.5px;color:var(--ink2);border-top:1px solid var(--line2);line-height:1.5}
+.side .help b{color:var(--ink)}
+
+/* export sheet */
+.sheet{position:fixed;inset:0;background:rgba(10,12,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.sheet .box{background:var(--panel);color:var(--ink);border-radius:8px;width:min(820px,100%);max-height:90vh;display:flex;flex-direction:column;gap:10px;padding:16px}
+.sheet h3{margin:0;font-size:16px}
+.sheet textarea{width:100%;height:280px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);padding:8px;resize:vertical;white-space:pre;overflow:auto}
+.sheet .r{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.sheet .msg{margin-right:auto;font-size:12px;color:var(--ink2)}
+
+@media (max-width:760px){
+  .main{flex-direction:column}
+  .side{width:auto;border-left:0;border-top:1px solid var(--line);max-height:40vh}
+  .board{padding:10px 16px}
+  .tile{min-height:96px}
+}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}.sw button::after{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand"><b>Talk Tally</b><span id="sub">KWS Honors Chemistry</span></div>
+  <div class="seg" role="group" aria-label="Mode">
+    <button id="m-tut" aria-pressed="true">Tutorial</button><button id="m-sem" aria-pressed="false">Seminar</button>
+  </div>
+  <div class="stat"><span>Session</span><b id="clock">00:00</b></div>
+  <div class="stat"><span>Student : teacher</span><b id="ratio">0 : 0</b></div>
+  <div class="stat"><span>Silent so far</span><b id="silent">0</b></div>
+  <div class="next"><span class="lbl">Next</span><b id="next1">—</b><small id="next2"></small></div>
+  <div class="sw"><span>Light</span><button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"></button><span>Dark</span></div>
+</div>
+
+<div class="bar">
+  <select id="section" aria-label="Section">
+    <option>Chemistry · Tutorial A</option><option>Chemistry · Tutorial B</option><option>Physics · Tutorial A</option>
+  </select>
+  <div class="legend" id="leg-tut">
+    <span><span class="tk c"></span>Click = I called on them</span>
+    <span><span class="tk"></span>Shift+click = volunteered</span>
+    <span>Keys 1–9 do the same</span>
+  </div>
+  <div class="legend" id="leg-sem" hidden>
+    <span>Pill click = <b>x</b> (mic)</span>
+    <span>Shift+click = <b>c</b> (chat)</span>
+    <span>Tile click = Gave opinion</span>
+    <span><kbd>#</kbd> then <kbd>O</kbd> <kbd>C</kbd> <kbd>T</kbd> <kbd>S</kbd> <kbd>Q</kbd> <kbd>P</kbd> <kbd>A</kbd> <kbd>I</kbd></span>
+  </div>
+  <div class="sp"></div>
+  <button class="btn" id="undo" disabled>Undo</button>
+  <button class="btn danger" id="reset">New session</button>
+  <button class="btn primary" id="export">Export</button>
+</div>
+
+<div class="main">
+  <div class="board"><div class="grid" id="grid"></div></div>
+  <aside class="side">
+    <h2>Roster <span id="count"></span></h2>
+    <div class="list" id="list"></div>
+    <div class="help" id="help"></div>
+  </aside>
+</div>
+
+<script>
+(function(){
+const ME={id:'me',first:'Bryce',last:'Wolcott',me:true};
+const ROSTER=[
+ ['Aisha','Rahman'],['Diego','Morales'],['Ethan','Park'],['Jonah','Whitfield'],
+ ['Liam','Okafor'],['Maya','Chen'],['Priya','Nair'],['Sofia','Ivanova'],
+ ['Amara','Osei'],['Ben','Castillo'],['Chloe','Hartman'],['Daniel','Kim'],
+ ['Elena','Petrova'],['Grace','Lindqvist'],['Hassan','Ali'],['Isabel','Reyes'],
+ ['Kenji','Sato'],['Lucas','Brandt'],['Noah','Feldman'],['Olivia','Marsh'],
+ ['Rohan','Mehta'],['Tara','Nguyen'],['Wesley','Grant'],['Zara','Hussain']
+].map((n,i)=>({id:'s'+i,first:n[0],last:n[1]}));
+const PRESENT=new Set(['s0','s1','s2','s3','s4','s5','s6','s7']);
+
+// Seminar categories, in spreadsheet column order B–I
+const CATS=[
+ {k:'opinion',l:'Opinion',col:'Gave opinion',g:'b',key:'o'},
+ {k:'claim',l:'Claim',col:'Refer to a claim from another student',g:'b',key:'c'},
+ {k:'themes',l:'Themes',col:'Relates to larger themes',g:'b',key:'t'},
+ {k:'source',l:'Source',col:'Referenced a Source',g:'g',key:'s'},
+ {k:'question',l:'Question',col:'Asks a Question',g:'p',key:'q'},
+ {k:'probes',l:'Probes',col:'Probes reasoning and evidence',g:'p',key:'p'},
+ {k:'persp',l:'Perspectives',col:'Acknowledges many perspectives',g:'p',key:'a'},
+ {k:'insight',l:'Insight',col:'Creative and insightful commentary',g:'p',key:'i'}
+];
+const byKey=Object.fromEntries(CATS.map(c=>[c.key,c.k]));
+
+let mode='tutorial';
+let events=[]; // tutorial: {mode,sid,vol,t}  seminar: {mode,sid,cat,chat,t}
+let notes={};
+let start=Date.now()-14*60000;
+(function seed(){
+  const s=(sid,min,vol)=>events.push({mode:'tutorial',sid,vol:!!vol,t:start+min*60000});
+  s('me',1);s('s5',2,1);s('me',3);s('s0',3.5,1);s('s0',4,1);s('s2',4.5,1);s('me',5);
+  s('s5',6,1);s('s1',6.5,0);s('me',7);s('s6',8,1);s('s6',8.5,1);s('s0',9,1);s('me',10);
+  s('s4',10.5,0);s('s5',11,1);s('s2',11.5,1);s('me',12);s('s0',13,1);
+  const m=(sid,min,cat,chat)=>events.push({mode:'seminar',sid,cat,chat:!!chat,t:start+min*60000});
+  m('me',1,'teacher');m('s5',2,'opinion');m('s0',3,'opinion');m('s0',3.5,'themes');m('s2',4,'question',1);
+  m('me',5,'teacher');m('s5',6,'source');m('s1',6.5,'opinion');m('s6',7,'claim');m('s6',7.5,'probes');
+  m('s0',9,'source',1);m('s5',10,'insight');m('s2',11,'opinion');m('me',12,'teacher');m('s0',13,'opinion',1);
+  notes.s0=['Related vigilantism to the value of the body'];notes.s4=['Camera off most of the session'];m('s4',2,'nocam');m('s4',9,'nocam');
+})();
+
+const $=id=>document.getElementById(id);
+const grid=$('grid'),list=$('list');
+const byFirst=(a,b)=>a.first.localeCompare(b.first)||a.last.localeCompare(b.last);
+const byLast=(a,b)=>a.last.localeCompare(b.last)||a.first.localeCompare(b.first);
+const people=()=>[ME,...ROSTER.filter(r=>PRESENT.has(r.id))].sort(byFirst);
+const evAll=()=>events.filter(e=>e.mode===mode);
+const evFor=sid=>evAll().filter(e=>e.sid===sid&&e.cat!=='nocam');
+const evRaw=sid=>evAll().filter(e=>e.sid===sid);
+const ago=(last,now)=>last===null?'no turns yet':(now-last<60000?'just now':Math.round((now-last)/60000)+' min ago');
+let armed=null, armTimer=null, editing=null;
+
+function render(){
+  const ppl=people(), n=ppl.length, now=Date.now();
+  const students=ppl.filter(p=>!p.me);
+  const ranked=students.map(p=>{const ev=evFor(p.id);
+    const score=mode==='tutorial'?ev.filter(e=>e.vol).length:ev.length;
+    return {p,score,last:ev.length?Math.max(...ev.map(e=>e.t)):0};})
+    .sort((a,b)=>a.score-b.score||a.last-b.last);
+  const rankOf={};ranked.forEach((r,i)=>rankOf[r.p.id]=i+1);
+  const cols=Math.max(1,Math.ceil(Math.sqrt(n))), rows=Math.ceil(n/cols);
+  grid.innerHTML=''; let i=0;
+  for(let r=0;r<rows;r++){
+    const row=document.createElement('div');row.className='row';row.style.setProperty('--cols',cols);
+    for(let c=0;c<cols&&i<n;c++){row.appendChild(tile(ppl[i],i+1,now,rankOf[ppl[i].id]));i++;}
+    grid.appendChild(row);
+  }
+  list.innerHTML='';
+  ROSTER.slice().sort(mode==='seminar'?byLast:byFirst).forEach(p=>{
+    const b=document.createElement('button');const on=PRESENT.has(p.id);
+    b.className='prow'+(on?' in':'');
+    const c=evFor(p.id).length;
+    const nm=mode==='seminar'?p.last+', '+p.first:p.first+' '+p.last;
+    b.innerHTML='<span class="box">'+(on?'✓':'')+'</span><span>'+nm+'</span>'+(on&&c?'<span class="cnt">'+c+'</span>':'');
+    b.onclick=()=>{on?PRESENT.delete(p.id):PRESENT.add(p.id);render();};
+    list.appendChild(b);
+  });
+  $('count').textContent=PRESENT.size+' present';
+  const st=evAll().filter(e=>e.sid!=='me'&&e.cat!=='nocam').length, tt=evAll().filter(e=>e.sid==='me').length;
+  $('ratio').textContent=st+' : '+tt;
+  $('silent').textContent=students.filter(p=>!evFor(p.id).length).length;
+  $('next1').textContent=ranked[0]?ranked[0].p.first+' '+ranked[0].p.last:'—';
+  $('next2').textContent=ranked.slice(1,3).map(r=>r.p.first).join(', ');
+  $('undo').disabled=!evAll().length;
+  $('help').innerHTML=mode==='tutorial'
+    ?'Sample roster and tallies. Tap a name to mark present or absent.<br>Grid mirrors Zoom with <b>Sort Gallery View By → First Name</b> and self-view on. Your tile counts teacher turns.<br><b>Next</b> = fewest volunteered turns, then longest silence.'
+    :'Sample roster and tallies. Tap a name to mark present or absent.<br>Pill colors match the seminar sheet. Export gives tab-separated rows in <b>last-name order</b>, columns A–K, ready to paste.<br><b>Next</b> = fewest contributions of any kind, then longest silence.';
+}
+
+function tile(p,key,now,rank){
+  const t=document.createElement('div');t.className='tile'+(p.me?' me':'')+(mode==='seminar'?' sem':'')+(armed===p.id?' armed':'');t.tabIndex=0;t.dataset.sid=p.id;
+  const ev=evFor(p.id), n=ev.length;
+  const last=n?Math.max(...ev.map(e=>e.t)):null;
+  if(!p.me){ if(n>=4)t.classList.add('hot'); else if(n>0)t.classList.add('on'); if(last===null||now-last>=8*60000)t.classList.add('stale'); }
+  let html='<div class="name"><span>'+p.first+' '+p.last+'</span><span class="k">'+key+'</span></div>'+
+    '<div class="last">'+(p.me?'teacher turns':ago(last,now))+'</div>';
+  if(mode==='tutorial'||p.me){
+    html+='<div class="foot"><div class="num">'+n+'</div><div class="ticks">'+ev.map(e=>'<span class="tk'+(mode==='tutorial'&&!e.vol&&!p.me?' c':'')+'"></span>').join('')+'</div></div>';
+  } else {
+    html+='<div class="pills">'+CATS.map(c=>{const v=ev.filter(e=>e.cat===c.k).map(e=>e.chat?'c':'x').join('');
+      return '<button class="pill '+c.g+(v?' has':'')+'" data-cat="'+c.k+'" title="'+c.col+'">'+c.l+'<span class="v">'+v+'</span></button>';}).join('')+'</div>'+
+      '<div class="pills camline"><button class="pill cam'+(evRaw(p.id).some(e=>e.cat==='nocam')?' has':'')+'" data-cat="nocam" title="No Camera">No camera<span class="v">'+evRaw(p.id).filter(e=>e.cat==='nocam').map(()=>'x').join('')+'</span></button></div>'+
+      '<div class="noteedit"><input id="note-'+p.id+'" placeholder="Add a note" autocomplete="off"><button class="btn" data-save="1">Add</button></div>'+
+      '<div class="notes">'+(notes[p.id]||[]).map(x=>'<div class="note">'+x.replace(/</g,'&lt;')+'</div>').join('')+'</div>';
+    html+='<div class="foot"><div class="num">'+n+'</div></div>';
+  }
+  html+=(rank?'<div class="rank '+(rank===1?'r1':rank<=3?'r'+rank:'rn')+'">'+(rank===1?'Next':'Next '+rank)+'</div>':'');
+  t.innerHTML=html;
+  t.onclick=e=>{
+    const pill=e.target.closest('.pill'), sv=e.target.closest('[data-save]');
+    if(e.target.closest('.noteedit')&&!sv)return;
+    if(sv){addNote(p.id,t.querySelector('input'));return;}
+    if(pill){
+      logSem(p.id,pill.dataset.cat,e.shiftKey&&pill.dataset.cat!=='nocam');return;
+    }
+    if(mode==='tutorial')log(p.id,e.shiftKey); else logSem(p.id,p.me?'teacher':'opinion',e.shiftKey);
+  };
+  t.onkeydown=e=>{if(e.target.tagName==='INPUT'){if(e.key==='Enter'){addNote(p.id,e.target);}return;}
+    if(e.key==='Enter'||e.key===' '){e.preventDefault();mode==='tutorial'?log(p.id,e.shiftKey):logSem(p.id,p.me?'teacher':'opinion',e.shiftKey);}};
+  return t;
+}
+function addNote(sid,inp){const v=inp.value.trim();if(!v)return;(notes[sid]=notes[sid]||[]).push(v);render();const n=$('note-'+sid);n&&n.focus();}
+function log(sid,vol){events.push({mode:'tutorial',sid,vol:!!vol,t:Date.now()});render();}
+function logSem(sid,cat,chat){events.push({mode:'seminar',sid,cat,chat:!!chat&&cat!=='teacher',t:Date.now()});disarm();render();}
+function undo(){const i=events.map(e=>e.mode).lastIndexOf(mode);if(i>=0)events.splice(i,1);render();}
+function arm(sid){armed=sid;clearTimeout(armTimer);armTimer=setTimeout(disarm,4000);render();}
+function disarm(){armed=null;clearTimeout(armTimer);}
+
+document.addEventListener('keydown',e=>{
+  if(['SELECT','TEXTAREA','INPUT'].includes(e.target.tagName))return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return;}
+  const m=e.code.match(/^(?:Digit|Numpad)([1-9])$/);
+  if(m){const p=people()[+m[1]-1];if(!p)return;
+    if(mode==='tutorial')log(p.id,e.shiftKey); else arm(p.id); return;}
+  if(mode==='seminar'&&armed){const k=e.key.toLowerCase();
+    if(byKey[k]){const p=people().find(x=>x.id===armed);logSem(armed,p&&p.me?'teacher':byKey[k],e.shiftKey);}
+    else if(e.key==='Escape'){disarm();render();}}
+});
+$('undo').onclick=undo;
+$('reset').onclick=()=>{events=events.filter(e=>e.mode!==mode);if(mode==='seminar'){notes={};}start=Date.now();render();};
+
+setInterval(()=>{
+  const s=Math.floor((Date.now()-start)/1000);
+  $('clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  if(s%30===0)render();
+},1000);
+
+// mode
+function setMode(m){mode=m;disarm();editing=null;
+  $('m-tut').setAttribute('aria-pressed',m==='tutorial');$('m-sem').setAttribute('aria-pressed',m==='seminar');
+  $('leg-tut').hidden=m!=='tutorial';$('leg-sem').hidden=m!=='seminar';
+  $('sub').textContent=m==='tutorial'?'KWS Honors Chemistry':'KWS Socratic Seminar';
+  $('export').textContent=m==='tutorial'?'Export CSV':'Export for sheet';
+  render();}
+$('m-tut').onclick=()=>setMode('tutorial');$('m-sem').onclick=()=>setMode('seminar');
+
+// export
+function showSheet(title,text,msg,copyText){copyText=copyText==null?text:copyText;
+  const sh=document.createElement('div');sh.className='sheet';
+  sh.innerHTML='<div class="box"><h3></h3><textarea id="out" readonly></textarea><div class="r"><span class="msg" id="msg"></span><button class="btn" id="cp">Copy</button><button class="btn primary" id="cl">Close</button></div></div>';
+  sh.querySelector('h3').textContent=title;sh.querySelector('#msg').textContent=msg;
+  document.body.appendChild(sh);
+  const ta=sh.querySelector('#out');ta.value=text;
+  sh.querySelector('#cp').onclick=()=>{navigator.clipboard.writeText(copyText).then(()=>{sh.querySelector('#msg').textContent='Copied.';}).catch(()=>{ta.value=copyText;ta.focus();ta.select();sh.querySelector('#msg').textContent='Select all and copy.';});};
+  sh.querySelector('#cl').onclick=()=>sh.remove();
+  sh.onclick=e=>{if(e.target===sh)sh.remove();};
+}
+$('export').onclick=()=>{
+  const sec=$('section').value, date=new Date().toISOString().slice(0,10);
+  const byId=Object.fromEntries([ME,...ROSTER].map(p=>[p.id,p]));
+  if(mode==='tutorial'){
+    let csv='date,section,student,type,minute\n';
+    evAll().forEach(e=>{const p=byId[e.sid];csv+=[date,sec,p.first+' '+p.last,p.me?'teacher':(e.vol?'volunteered':'called'),((e.t-start)/60000).toFixed(1)].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')+'\n';});
+    csv+='\nsummary\nstudent,volunteered,called,total,last_minute\n';
+    people().filter(p=>!p.me).forEach(p=>{const ev=evFor(p.id), v=ev.filter(e=>e.vol).length;
+      csv+=[p.first+' '+p.last,v,ev.length-v,ev.length,ev.length?((Math.max(...ev.map(e=>e.t))-start)/60000).toFixed(1):''].join(',')+'\n';});
+    showSheet('Session export (CSV)',csv,'Paste into Sheets. The summary block is below the event log.');
+  } else {
+    const clean=v=>String(v).replace(/[\t\r\n]+/g,' ');
+    const header=['Student Name',...CATS.map(c=>c.col),'No Camera','Notes'].join('\t')+'\n';
+    let tsv='';
+    ROSTER.filter(p=>PRESENT.has(p.id)).sort(byLast).forEach(p=>{
+      const ev=evFor(p.id);
+      tsv+=[p.last+', '+p.first,...CATS.map(c=>ev.filter(e=>e.cat===c.k).map(e=>e.chat?'c':'x').join('')),evRaw(p.id).filter(e=>e.cat==='nocam').map(()=>'x').join(''),clean((notes[p.id]||[]).join('; '))].join('\t')+'\n';});
+    showSheet('Seminar export (tab-separated, columns A–K)',header+tsv,'Header is shown for reference only. Copy, click cell A of the first student row in the sheet, paste.',tsv);
+  }
+};
+
+// theme
+const root=document.documentElement, sw=$('theme');
+function setTheme(t){root.dataset.theme=t;sw.setAttribute('aria-checked',t==='dark');try{localStorage.setItem('tt-theme',t)}catch(e){}}
+let saved=null;try{saved=localStorage.getItem('tt-theme')}catch(e){}
+setTheme(saved||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+sw.onclick=()=>setTheme(root.dataset.theme==='dark'?'light':'dark');
+
+render();
+})();
+</script>
+
+</body>
+</html>
